@@ -37,6 +37,10 @@ function initTheme() {
 /* =========================================================
    Ambient rain canvas
    Intensity can be tuned per-page via body[data-rain="heavy|normal|light"]
+
+   Also drives two optional extra weather effects on the same canvas:
+     - Wind streaks:  body[data-wind="off"] to disable (on by default)
+     - Rain ripples:  body[data-ripples="off"] to disable (on by default)
    ========================================================= */
 function initRain() {
   var canvas = document.getElementById("rain-canvas");
@@ -49,7 +53,10 @@ function initRain() {
   var dropCount = countMap[intensity] || 120;
   var baseSpeed = speedMap[intensity] || 7;
 
-  var width, height, drops;
+  var windEnabled = document.body.getAttribute("data-wind") !== "off";
+  var ripplesEnabled = document.body.getAttribute("data-ripples") !== "off";
+
+  var width, height, drops, windLines, ripples, rippleTimer;
 
   function resize() {
     width = canvas.width = window.innerWidth;
@@ -67,14 +74,45 @@ function initRain() {
     };
   }
 
+  function makeWindLine() {
+    return {
+      x: Math.random() * width,
+      y: Math.random() * height * 0.6, // upper/mid section, above the "ground"
+      len: 60 + Math.random() * 130,
+      speed: 2 + Math.random() * 4,
+      opacity: 0.05 + Math.random() * 0.10
+    };
+  }
+
+  function spawnRipple() {
+    if (!ripplesEnabled) return;
+    ripples.push({
+      x: Math.random() * width,
+      y: height * (0.72 + Math.random() * 0.24), // near the bottom, like ground/water
+      radius: 1,
+      maxRadius: 12 + Math.random() * 16,
+      opacity: 0.3
+    });
+  }
+
   function init() {
     resize();
     drops = [];
     for (var i = 0; i < dropCount; i++) drops.push(makeDrop());
+
+    windLines = [];
+    if (windEnabled) {
+      for (var w = 0; w < 16; w++) windLines.push(makeWindLine());
+    }
+
+    ripples = [];
+    if (ripplesEnabled) {
+      clearInterval(rippleTimer);
+      rippleTimer = setInterval(spawnRipple, 280);
+    }
   }
 
-  function tick() {
-    ctx.clearRect(0, 0, width, height);
+  function drawRain() {
     ctx.strokeStyle = "rgba(180, 210, 230, 1)";
     ctx.lineCap = "round";
 
@@ -96,6 +134,59 @@ function initRain() {
       }
     }
     ctx.globalAlpha = 1;
+  }
+
+  function drawWind() {
+    if (!windEnabled) return;
+    ctx.strokeStyle = "rgba(180, 210, 230, 1)";
+    ctx.lineWidth = 1;
+
+    for (var i = 0; i < windLines.length; i++) {
+      var w = windLines[i];
+      ctx.globalAlpha = w.opacity;
+      ctx.beginPath();
+      ctx.moveTo(w.x, w.y);
+      ctx.lineTo(w.x - w.len, w.y + w.len * 0.06);
+      ctx.stroke();
+
+      w.x += w.speed;
+      w.y += w.speed * 0.04;
+
+      if (w.x - w.len > width) {
+        w.x = -w.len;
+        w.y = Math.random() * height * 0.6;
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawRipples() {
+    if (!ripplesEnabled) return;
+    ctx.lineWidth = 1.1;
+
+    for (var i = ripples.length - 1; i >= 0; i--) {
+      var r = ripples[i];
+      ctx.globalAlpha = r.opacity;
+      ctx.strokeStyle = "rgba(150, 200, 220, 1)";
+      ctx.beginPath();
+      ctx.ellipse(r.x, r.y, r.radius, r.radius * 0.35, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      r.radius += 0.6;
+      r.opacity -= 0.01;
+
+      if (r.radius >= r.maxRadius || r.opacity <= 0) {
+        ripples.splice(i, 1);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function tick() {
+    ctx.clearRect(0, 0, width, height);
+    drawWind();
+    drawRain();
+    drawRipples();
     requestAnimationFrame(tick);
   }
 

@@ -1,0 +1,5 @@
+venv/
+retrain_env/
+__pycache__/
+*.pycinstance/
+.env

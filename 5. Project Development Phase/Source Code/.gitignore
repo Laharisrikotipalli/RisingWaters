@@ -1,0 +1,17 @@
+venv/
+retrain_env/
+__pycache__/
+*.pyc
+
+# Local environment & database (never commit real secrets or user data)
+.env
+instance/
+*.db
+.env
+__pycache__/
+*.pyc
+venv/
+.venv/
+instance/
+*.sqlite3
+.DS_Store

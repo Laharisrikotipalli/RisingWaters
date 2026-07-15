@@ -32,6 +32,9 @@ Pandas · NumPy · Joblib · Gunicorn · Render (deployment)
 ## Live Demo
 🔗 [risingwaters-1.onrender.com](https://risingwaters-1.onrender.com)
 
+## Demo Video
+🎥 [Watch the project walkthrough](https://drive.google.com/file/d/1mrpNulO4c-xLdWXaaDxH9CV9T5jWIXNK/view?usp=sharing)
+
 ## Setup
 ```bash
 git clone https://github.com/Laharisrikotipalli/RisingWaters.git
